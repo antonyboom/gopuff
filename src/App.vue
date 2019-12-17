@@ -1,8 +1,15 @@
 <template>
   <div id="app">
+    <div class="search">
+      <label for="search" class="material-input">
+        <input type="text" id="search" placeholder=""  v-model="search">
+        <span class="label">Search</span>
+        <span class="border"></span>
+      </label>
+    </div>
     <div class="cart">
       <ul class="items">
-        <li class="item" :key="item.id" v-for="item in products">
+        <li class="item" :key="item.id" v-for="item in filteredList">
           <div class="item-preview">
             <img :src="item.thumbnail" :alt="item.title" class="item-thumbnail">
             <div class="item-content">
@@ -61,6 +68,11 @@
       this.getItemMetaData(this.response.cart.products.map(item => item.id))
     },
     computed: {
+      filteredList() {
+        return this.products.filter(p => {
+          return p.name.toLowerCase().includes(this.search.toLowerCase())
+        })
+      },
       getSubtotal() {
         return this.products
           .reduce((a, b) => a + b.price * b.quantity, 0)
@@ -79,6 +91,7 @@
     },
     data() {
       return {
+        search: '',
         response: json,
         products: [],
         subTotal: 0,
@@ -102,17 +115,7 @@
   body {
     margin: 0;
     background: #f3f6f9;
-    padding: 30px;
-  }
-
-  .title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-    text-transform: uppercase;
-    font-size: 110%;
-    font-weight: normal;
+    padding: 24px;
   }
 
   .items {
@@ -126,13 +129,13 @@
     font-family: 'Helvetica Neue', Arial, sans-serif;
     font-size: 14px;
     color: #333a45;
-    border-radius: 5px;
+    border-radius: 8px;
     padding: 16px;
   }
 
   .cart-footer {
     position: sticky;
-    bottom: 0px;
+    bottom: 12px;
     z-index: 1;
     background: #3bb1e6;
     padding: 4px 16px;
@@ -163,7 +166,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
+    padding: 16px 0;
     border-bottom: 2px solid rgba(51, 58, 69, 0.1);
   }
 
@@ -180,14 +183,14 @@
   }
 
   .item-thumbnail {
-    margin-right: 20px;
+    margin-right: 24px;
     max-width: 100px;
     max-height: 100px;
     border-radius: 3px;
   }
 
   .item-title {
-    margin: 0 0 10px 0;
+    margin: 0 0 12px 0;
     font-size: inherit;
   }
 
@@ -210,7 +213,7 @@
   }
 
   .item-quantity {
-    max-width: 30px;
+    max-width: 24px;
     padding: 8px 12px;
     font-size: inherit;
     color: rgba(51, 58, 69, 0.8);
@@ -220,6 +223,68 @@
   }
 
   .item-price {
-    margin-left: 20px;
+    margin-left: 24px;
+  }
+
+  /* search styles */
+  .material-input {
+    position: relative;
+    margin: auto;
+    width: 100%;
+    max-width: 280px;
+  }
+  .material-input .label {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    font-size: 16px;
+    color: #9098a9;
+    font-weight: 500;
+    transform-origin: 0 0;
+    transition: all 0.2s ease;
+  }
+  .material-input .border {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: #3bb1e6;
+    transform: scaleX(0);
+    transform-origin: 0 0;
+    transition: all 0.15s ease;
+  }
+  .material-input input {
+    -webkit-appearance: none;
+    width: 100%;
+    border: 0;
+    font-family: inherit;
+    padding: 12px 0;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 500;
+    border-bottom: 2px solid #c8ccd4;
+    background: none;
+    border-radius: 0;
+    color: #223254;
+    transition: all 0.15s ease;
+  }
+  .material-input input:hover {
+    background: rgba(34,50,84,0.03);
+  }
+  .material-input input:not(:placeholder-shown) + span {
+    color: #5a667f;
+    transform: translateY(-26px) scale(0.75);
+  }
+  .material-input input:focus {
+    background: none;
+    outline: none;
+  }
+  .material-input input:focus + span {
+    color: #3bb1e6;
+    transform: translateY(-26px) scale(0.75);
+  }
+  .material-input input:focus + span + .border {
+    transform: scaleX(1);
   }
 </style>
