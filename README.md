@@ -1,5 +1,9 @@
-# gopuff
+# GoPuff
 
+## Download project 
+```
+https://github.com/antonyboom/gopuff.git
+```
 ## Project setup
 ```
 npm install
