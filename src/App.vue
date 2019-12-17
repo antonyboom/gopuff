@@ -1,31 +1,32 @@
 <template>
   <div id="app">
     <div class="cart">
-      <h1 class="title">Order</h1>
       <ul class="items">
         <li class="item" :key="item.id" v-for="item in products">
           <div class="item-preview">
-            <img src="" alt="" class="item-thumbnail">
-            <div>
+            <img :src="item.thumbnail" :alt="item.title" class="item-thumbnail">
+            <div class="item-content">
               <h2 class="item-title">{{item.name}}</h2>
-              <p class="item-description">{{item.description}}</p>
+              <div class="item-description" v-html="item.description"></div>
             </div>
           </div>
           <div>
-            <input type="text" class="item-quantity">
+            <input type="text" class="item-quantity" v-model="item.quantity">
             <span class="item-price">${{item.price}}</span>
           </div>
         </li>
       </ul>
-      <h3 class="cart-line">
-        Subtotal <span class="cart-price">${{subTotal}}</span>
-      </h3>
-      <h3 class="cart-line">
-        Discount <span class="cart-price">${{discount}}</span>
-      </h3>
-      <h3 class="cart-line">
-        Total <span class="cart-price cart-total">${{finalPrice}}</span>
-      </h3>
+      <div class="cart-footer">
+        <h3 class="cart-line">
+          Subtotal <span class="cart-price">$ {{getSubtotal}}</span>
+        </h3>
+        <h3 class="cart-line">
+          Discount <span class="cart-price">$ {{getSubTotalDiscount}}</span>
+        </h3>
+        <h3 class="cart-line">
+          Total <span class="cart-total">$ {{getTotal}}</span>
+        </h3>
+      </div>
     </div>
   </div>
 </template>
@@ -37,42 +38,48 @@
     name: 'app',
     components: {},
     methods: {
-      getSubTotal(items) {
-        return items
-          .map(item => {
-              return item.price * item.quantity
-            })
-          .reduce((a, b) => a + b, 0)
-          .toFixed(2);
-      },
-      getSubTotalDiscount() {
-        return this.response.cart.products
-          .map(item => {
-              return item.discount * item.quantity
-            })
-          .reduce((a, b) => a + b, 0)
-          .toFixed(2);
-      },
       getItemMetaData(ids) {
         fetch(`https://prodcat.gopuff.com/api/products?location_id=-1&product_ids=${ids}`)
-        .then(res => res.json())
-        .then(json => {
-          /* list of products */
-          this.products = json.products;
-          /* update variable to display total cost of the cart  */
-          this.subTotal = this.getSubTotal(this.products);
-          this.discount = this.getSubTotalDiscount(this.products);
-          this.finalPrice =  this.subTotal - this.discount;
-        })
+          .then(res => res.json())
+          .then(json => {
+            /* list of products */
+            this.products = json.products.map(item => {
+              const existedProduct = this.response.cart.products.find(p => p.product_id === item.product_id);
+              if (existedProduct) {
+                item.quantity = existedProduct.quantity;
+                item.discount = existedProduct.discount;
+                item.thumbnail = item.avatar.small;
+                return item;
+              }
+              return item
+            });
+          })
       }
     },
     created() {
       /* getting list of ids to load extended item info */
-      this.getItemMetaData(this.cart.map(item => item.id))
+      this.getItemMetaData(this.response.cart.products.map(item => item.id))
+    },
+    computed: {
+      getSubtotal() {
+        return this.products
+          .reduce((a, b) => a + b.price * b.quantity, 0)
+          .toFixed(2)
+      },
+      getSubTotalDiscount() {
+        return this.products
+          .reduce((a, b) => a + b.discount * b.quantity, 0)
+          .toFixed(2)
+      },
+      getTotal() {
+        return (
+          this.getSubtotal - this.getSubTotalDiscount
+        )
+      }
     },
     data() {
       return {
-        cart: json.cart.products,
+        response: json,
         products: [],
         subTotal: 0,
         discount: 0,
@@ -94,7 +101,7 @@
 
   body {
     margin: 0;
-    background: #fdca40;
+    background: #f3f6f9;
     padding: 30px;
   }
 
@@ -115,30 +122,41 @@
   }
 
   .cart {
-    background: #fff;
+    background: #ffffff;
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     color: #333a45;
-    border-radius: 3px;
-    padding: 30px;
+    border-radius: 5px;
+    padding: 16px;
+  }
+
+  .cart-footer {
+    position: sticky;
+    bottom: 0px;
+    z-index: 1;
+    background: #3bb1e6;
+    padding: 4px 16px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
   }
 
   .cart-line {
     display: flex;
     justify-content: space-between;
+    margin: 4px;
     align-items: center;
-    margin: 20px 0 0 0;
-    font-size: inherit;
-    font-weight: normal;
-    color: rgba(51, 58, 69, 0.8);
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 1px solid #ffffff;
   }
 
   .cart-price {
-    color: #333a45;
+    font-size: 15px;
   }
 
   .cart-total {
-    font-size: 130%;
+    font-size: 16px;
   }
 
   .item {
@@ -151,23 +169,44 @@
 
   .item-preview {
     display: flex;
-    align-items: center;
+    align-items: start;
+    width: 80%;
+  }
+
+  .item-content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
   }
 
   .item-thumbnail {
     margin-right: 20px;
+    max-width: 100px;
+    max-height: 100px;
     border-radius: 3px;
   }
 
   .item-title {
     margin: 0 0 10px 0;
     font-size: inherit;
-    display: flex;
   }
 
   .item-description {
     margin: 0;
     color: rgba(51, 58, 69, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .item-description p {
+    text-align: left !important;
+    margin: 0;
+  }
+
+  li {
+    text-align: left !important;
+    margin: 0;
   }
 
   .item-quantity {
